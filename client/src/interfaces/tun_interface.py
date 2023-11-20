@@ -1,6 +1,7 @@
 import logging as LOGGER
 import os
 import struct
+import sys
 import subprocess
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
@@ -55,12 +56,12 @@ class TUNInterface:
         os.write(self._descriptor, packet)
 
 
-def test() -> None:
-    interface = TUNInterface('custom-tunnel', address=IPv4Address('10.1.0.0'))
+def run() -> None:
+    interface = TUNInterface('vzoneVPN', address=IPv4Address('10.1.0.0'))
     interface.up()
 
     def read_loop():
-        while time.sleep(0.01) is None:
+        while time.sleep(0.1) is None:
             interface.read(1024)
 
     with ThreadPoolExecutor(max_workers=2, thread_name_prefix='tun-') as pool:
@@ -68,4 +69,6 @@ def test() -> None:
 
 
 if __name__ == '__main__':
-    test()
+    if not os.geteuid() == 0:
+        sys.exit("\nOnly root can run this\n")
+    run()
